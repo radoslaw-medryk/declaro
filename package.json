@@ -1,0 +1,14 @@
+{
+  "name": "declaro",
+  "version": "0.1.0",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@radoslaw-medryk/tslint": "^0.1.7",
+    "tslint": "^5.13.0",
+    "typescript": "^3.3.3333"
+  }
+}
