@@ -1,9 +1,12 @@
-export class RowDeclaration {
-    public readonly name: string;
-    public readonly details?: string;
+import { ClassConstructor } from "./primitives";
+import { ForeignKeyDeclaration } from "./ForeignKeyDeclaration";
 
-    constructor(name: string, details?: string) {
-        this.name = name;
-        this.details = details;
-    }
-}
+export type RowDeclaration = {
+    tableConstructor: ClassConstructor;
+    name: string;
+    type?: string;
+    notNull?: boolean;
+    unique?: boolean;
+    primaryKey?: boolean;
+    foreignKey?: ForeignKeyDeclaration;
+};

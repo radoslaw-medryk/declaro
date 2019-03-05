@@ -1,55 +1,68 @@
 import { TableDeclaration } from "./TableDeclaration";
-import { ClassConstructor, WithStaticSql } from "./primitives";
+import { RowDeclaration } from "./RowDeclaration";
+import { Declarations } from "./Declarations";
 
 export class Declaro {
     public static readonly instance: Declaro = new Declaro();
 
-    public tables: TableDeclaration[] = [];
+    private tables: TableDeclaration[] = [];
+    private rows: RowDeclaration[] = [];
 
-    public declareTable = (classConstructor: ClassConstructor, name: string) => {
-        let table = this.findTable(classConstructor);
-        if (!table) {
-            table = this.newTable(classConstructor);
+    public declareTable = (tableDeclaration: TableDeclaration) => {
+        this.validateTable(tableDeclaration);
+
+        this.tables = [...this.tables, tableDeclaration];
+    };
+
+    public declareRow = (rowDeclaration: RowDeclaration) => {
+        this.validateRow(rowDeclaration);
+
+        this.rows = [...this.rows, rowDeclaration];
+    };
+
+    public getDeclarations = (): Declarations => {
+        return {
+            tables: [...this.tables],
+            rows: [...this.rows],
+        };
+    };
+
+    private validateTable = (tableDeclaration: TableDeclaration) => {
+        if (this.tables.some(q => q.classConstructor === tableDeclaration.classConstructor)) {
+            throw new Error(`Table with constructor '${tableDeclaration.classConstructor.name}' already declared.`);
         }
 
-        table.setName(name);
+        // TODO [RM]: include case-sensivity in check:
+        if (this.tables.some(q => q.name === tableDeclaration.name)) {
+            throw new Error(`Table with name '${tableDeclaration.name}' already declared.`);
+        }
+    };
 
-        const sql = (classConstructor as WithStaticSql).sql;
-        if (sql) {
-            table.setDetails(sql);
+    private validateRow = (rowDeclaration: RowDeclaration) => {
+        // TODO [RM]: include case-sensivity in check:
+        if (
+            this.rows
+                .filter(q => q.tableConstructor === rowDeclaration.tableConstructor)
+                .some(q => q.name === rowDeclaration.name)
+        ) {
+            throw new Error(`Row with name '${rowDeclaration.name}' already declared for the same table.`);
         }
 
-        // TODO [RM]: handle duplicated declarations for the same table
-        // TODO [RM]: handle table name duplicates
-    }
-
-    public declareRow = (target: object, propertyKey: string | symbol, details?: string) => {
-        const classConstructor = target.constructor;
-        const rowName = propertyKey as string; // TODO [RM]: handle symbol type here
-
-        let table = this.findTable(classConstructor);
-        if (!table) {
-            table = this.newTable(classConstructor);
+        if (!rowDeclaration.type && !rowDeclaration.foreignKey) {
+            throw new Error(`'type' cannot be ommited for non-foreign key.`);
         }
-        table.addRow(rowName, details);
 
-        // TODO [RM]: handle duplicated declarations for the same property or property name duplicates
-    }
+        // TODO [RM]: Investigate if this check needed:
+        if (rowDeclaration.foreignKey && rowDeclaration.primaryKey) {
+            throw new Error(`'foreignKey' and 'primaryKey' cannot be both set.`);
+        }
 
-    private findTable = (classConstructor: ClassConstructor): TableDeclaration | undefined => {
-        return this.tables
-            .filter(q => q.classConstructor === classConstructor)
-            [0];
-    }
+        if (rowDeclaration.primaryKey && rowDeclaration.notNull === false) {
+            throw new Error(`For Primary Key 'notNull' cannot be explicitly set to 'false'.`);
+        }
 
-    private newTable = (classConstructor: ClassConstructor): TableDeclaration => {
-        const newTable = new TableDeclaration(classConstructor);
-
-        this.tables = [
-            ...this.tables,
-            newTable,
-        ];
-
-        return newTable;
-    }
+        if (rowDeclaration.primaryKey && rowDeclaration.unique === false) {
+            throw new Error(`For Primary Key 'unique' cannot be explicitly set to 'false'.`);
+        }
+    };
 }

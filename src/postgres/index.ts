@@ -1,2 +1,2 @@
-export * from "./i";
+export * from "./_i";
 export * from "./sqlForTables";
