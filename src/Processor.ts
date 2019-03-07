@@ -105,5 +105,19 @@ export class Processor {
                 }' not found in declarations.`
             );
         }
+
+        if (
+            foreignKeyDeclaration.targetRowName &&
+            declarations.rows
+                .filter(q => q.foreignKey)
+                .filter(q => q.foreignKey!.targetConstructor === foreignKeyDeclaration.targetConstructor)
+                .some(q => !q.foreignKey!.targetRowName)
+        ) {
+            throw new Error(
+                `Composite Foreign Key to target named = '${
+                    foreignKeyDeclaration.targetConstructor.name
+                }' have inconsistent declarations - some rows have targetRowName, some doesn't.`
+            );
+        }
     };
 }

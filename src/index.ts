@@ -1,6 +1,8 @@
 export * from "./Declaro";
-export * from "./TableDeclaration";
-export * from "./RowDeclaration";
-
 export * from "./decorators";
+
+export * from "./Processor";
+
 export * from "./postgres";
+
+// TODO [RM]: write unit tests

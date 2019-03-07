@@ -1,2 +1,2 @@
-export * from "./_i";
 export * from "./sqlForTables";
+export * from "./CreateTableSqlOptions";

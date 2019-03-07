@@ -1,15 +1,43 @@
 import { Declaro } from "../Declaro";
-import { RowOptions } from "../RowOptions";
-
+import { RowDecoratorOptions } from "./RowDecoratorOptions";
+import { RowDeclaration } from "../RowDeclaration";
+import { ForeignKeyDeclaration } from "../ForeignKeyDeclaration";
+import { RowDecoratorForeignKeyOptions } from "./RowDecoratorForeignKeyOptions";
 const declaro = Declaro.instance;
 
-export const row = (typeOrOptions: string | RowOptions) => {
+const transformForeignKey = (
+    foreignKey: RowDecoratorForeignKeyOptions | undefined
+): ForeignKeyDeclaration | undefined => {
+    if (!foreignKey) {
+        return undefined;
+    } else if (typeof foreignKey === "function") {
+        return {
+            targetConstructor: foreignKey,
+            targetRowName: undefined,
+        };
+    } else {
+        return {
+            targetConstructor: foreignKey[0],
+            targetRowName: foreignKey[1],
+        };
+    }
+};
+
+export const row = (typeOrOptions: string | RowDecoratorOptions) => {
     const decorator: PropertyDecorator = (target, propertyKey) => {
         const rowOptions = typeof typeOrOptions === "string" ? { type: typeOrOptions } : typeOrOptions;
 
-        const name = propertyKey as string; // TODO [RM]: handle symbol here
+        const rowDeclaration: RowDeclaration = {
+            tableConstructor: target.constructor,
+            name: propertyKey as string, // TODO [RM]: is OK to cast? (handle symbol type here)
+            type: rowOptions.type,
+            notNull: rowOptions.notNull,
+            unique: rowOptions.unique,
+            primaryKey: rowOptions.primaryKey,
+            foreignKey: transformForeignKey(rowOptions.foreignKey),
+        };
 
-        declaro.declareRow(target, name, rowOptions);
+        declaro.declareRow(rowDeclaration);
     };
     return decorator;
 };
