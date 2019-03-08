@@ -1,12 +1,12 @@
 import { TableDeclaration } from "./TableDeclaration";
-import { RowDeclaration } from "./RowDeclaration";
+import { ColumnDeclaration } from "./ColumnDeclaration";
 import { Declarations } from "./Declarations";
 
 export class Declaro {
     public static readonly instance: Declaro = new Declaro();
 
     private tables: TableDeclaration[] = [];
-    private rows: RowDeclaration[] = [];
+    private columns: ColumnDeclaration[] = [];
 
     public declareTable = (tableDeclaration: TableDeclaration) => {
         this.validateTable(tableDeclaration);
@@ -14,16 +14,16 @@ export class Declaro {
         this.tables = [...this.tables, tableDeclaration];
     };
 
-    public declareRow = (rowDeclaration: RowDeclaration) => {
-        this.validateRow(rowDeclaration);
+    public declareColumn = (columnDeclaration: ColumnDeclaration) => {
+        this.validateColumn(columnDeclaration);
 
-        this.rows = [...this.rows, rowDeclaration];
+        this.columns = [...this.columns, columnDeclaration];
     };
 
     public getDeclarations = (): Declarations => {
         return {
             tables: [...this.tables],
-            rows: [...this.rows],
+            columns: [...this.columns],
         };
     };
 
@@ -38,30 +38,30 @@ export class Declaro {
         }
     };
 
-    private validateRow = (rowDeclaration: RowDeclaration) => {
+    private validateColumn = (columnDeclaration: ColumnDeclaration) => {
         // TODO [RM]: include case-sensivity in check:
         if (
-            this.rows
-                .filter(q => q.tableConstructor === rowDeclaration.tableConstructor)
-                .some(q => q.name === rowDeclaration.name)
+            this.columns
+                .filter(q => q.tableConstructor === columnDeclaration.tableConstructor)
+                .some(q => q.name === columnDeclaration.name)
         ) {
-            throw new Error(`Row with name '${rowDeclaration.name}' already declared for the same table.`);
+            throw new Error(`Column with name '${columnDeclaration.name}' already declared for the same table.`);
         }
 
-        if (!rowDeclaration.type && !rowDeclaration.foreignKey) {
+        if (!columnDeclaration.type && !columnDeclaration.foreignKey) {
             throw new Error(`'type' cannot be ommited for non-foreign key.`);
         }
 
         // TODO [RM]: Investigate if this check needed:
-        if (rowDeclaration.foreignKey && rowDeclaration.primaryKey) {
+        if (columnDeclaration.foreignKey && columnDeclaration.primaryKey) {
             throw new Error(`'foreignKey' and 'primaryKey' cannot be both set.`);
         }
 
-        if (rowDeclaration.primaryKey && rowDeclaration.notNull === false) {
+        if (columnDeclaration.primaryKey && columnDeclaration.notNull === false) {
             throw new Error(`For Primary Key 'notNull' cannot be explicitly set to 'false'.`);
         }
 
-        if (rowDeclaration.primaryKey && rowDeclaration.unique === false) {
+        if (columnDeclaration.primaryKey && columnDeclaration.unique === false) {
             throw new Error(`For Primary Key 'unique' cannot be explicitly set to 'false'.`);
         }
     };

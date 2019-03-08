@@ -1,6 +1,6 @@
 import { TableDeclaration } from "./TableDeclaration";
-import { ProcessedRowDeclaration } from "./ProcessedRowDeclaration";
+import { ProcessedColumnDeclaration } from "./ProcessedColumnDeclaration";
 
 export type ProcessedTableDeclaration = TableDeclaration & {
-    rows: ProcessedRowDeclaration[];
+    columns: ProcessedColumnDeclaration[];
 };

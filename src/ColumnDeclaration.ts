@@ -1,7 +1,7 @@
 import { ClassConstructor } from "./primitives";
 import { ForeignKeyDeclaration } from "./ForeignKeyDeclaration";
 
-export type RowDeclaration = {
+export type ColumnDeclaration = {
     tableConstructor: ClassConstructor;
     name: string;
     type: string;

@@ -1,6 +1,6 @@
 // TODO [RM]: find light library replacement or move to own library
 
-export type GroupByRowType<TItem, TKey extends keyof TItem> = {
+export type GroupByGroup<TItem, TKey extends keyof TItem> = {
     keyValue: TItem[TKey];
     items: TItem[];
 };
@@ -8,7 +8,7 @@ export type GroupByRowType<TItem, TKey extends keyof TItem> = {
 export const groupBy = <TItem, TKey extends keyof TItem>(
     array: TItem[],
     key: TKey
-): Array<GroupByRowType<TItem, TKey>> => {
+): Array<GroupByGroup<TItem, TKey>> => {
     return array.reduce(
         (prev, curr) => {
             const currValue = curr[key];
@@ -23,6 +23,6 @@ export const groupBy = <TItem, TKey extends keyof TItem>(
                 },
             ];
         },
-        [] as Array<GroupByRowType<TItem, TKey>>
+        [] as Array<GroupByGroup<TItem, TKey>>
     );
 };

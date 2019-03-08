@@ -1,7 +1,7 @@
 import { TableDeclaration } from "./TableDeclaration";
-import { RowDeclaration } from "./RowDeclaration";
+import { ColumnDeclaration } from "./ColumnDeclaration";
 
 export type Declarations = {
     tables: TableDeclaration[];
-    rows: RowDeclaration[];
+    columns: ColumnDeclaration[];
 };

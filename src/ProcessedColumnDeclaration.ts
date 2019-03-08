@@ -1,6 +1,6 @@
-import { RowDeclaration } from "./RowDeclaration";
+import { ColumnDeclaration } from "./ColumnDeclaration";
 import { ProcessedForeignKeyDeclaration } from "./ProcessedForeignKeyDeclaration";
 
-export type ProcessedRowDeclaration = RowDeclaration & {
+export type ProcessedColumnDeclaration = ColumnDeclaration & {
     foreignKey?: ProcessedForeignKeyDeclaration;
 };

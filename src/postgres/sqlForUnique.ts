@@ -1,12 +1,12 @@
-import { ProcessedRowDeclaration } from "../ProcessedRowDeclaration";
+import { ProcessedColumnDeclaration } from "../ProcessedColumnDeclaration";
 import { _i } from "./_i";
 
 // TODO [RM]: Need to handle unique groups as well, not only unique single fields e.g. `UNIQUE ("firstName", "lastName")`
 
-export const sqlForUnique = (uniqueRows: ProcessedRowDeclaration[]): string[] => {
-    if (uniqueRows.length === 0) {
+export const sqlForUnique = (uniqueColumns: ProcessedColumnDeclaration[]): string[] => {
+    if (uniqueColumns.length === 0) {
         return [];
     }
 
-    return uniqueRows.map(q => `UNIQUE (${_i(q.name)})`);
+    return uniqueColumns.map(q => `UNIQUE (${_i(q.name)})`);
 };

@@ -1,12 +1,12 @@
 import { CreateTableSqlOptions } from "./CreateTableSqlOptions";
 import { ProcessedTableDeclaration } from "../ProcessedTableDeclaration";
 import { _i } from "./_i";
-import { sqlForRow } from "./sqlForRow";
+import { sqlForColumn } from "./sqlForColumn";
 import { sqlForConstraints } from "./sqlForConstraints";
 
 export const sqlForTable = (table: ProcessedTableDeclaration, options: CreateTableSqlOptions = {}) => {
-    const entriesSql = table.rows
-        .map(row => sqlForRow(row))
+    const entriesSql = table.columns
+        .map(column => sqlForColumn(column))
         .concat(sqlForConstraints(table))
         .join(`,\n`);
 
