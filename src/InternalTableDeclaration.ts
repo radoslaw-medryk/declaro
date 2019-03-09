@@ -1,6 +1,6 @@
 import { ClassConstructor } from "./primitives";
 
-export type TableDeclaration = {
+export type InternalTableDeclaration = {
     classConstructor: ClassConstructor;
     name: string;
 };

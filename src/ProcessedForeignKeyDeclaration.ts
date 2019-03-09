@@ -1,5 +1,5 @@
 import { ForeignKeyDeclaration } from "./ForeignKeyDeclaration";
-import { TableDeclaration } from "./TableDeclaration";
+import { TableDeclaration } from "./TableDeclaratrion";
 
 export type ProcessedForeignKeyDeclaration = ForeignKeyDeclaration & {
     targetDeclaration: TableDeclaration;

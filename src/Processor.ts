@@ -1,11 +1,11 @@
 import { Declarations } from "./Declarations";
 import { ProcessedDeclarations } from "./ProcessedDeclarations";
-import { TableDeclaration } from "./TableDeclaration";
 import { ProcessedTableDeclaration } from "./ProcessedTableDeclaration";
-import { ColumnDeclaration } from "./ColumnDeclaration";
 import { ProcessedColumnDeclaration } from "./ProcessedColumnDeclaration";
-import { ForeignKeyDeclaration } from "./ForeignKeyDeclaration";
 import { ProcessedForeignKeyDeclaration } from "./ProcessedForeignKeyDeclaration";
+import { TableDeclaration } from "./TableDeclaratrion";
+import { ColumnDeclaration } from "./ColumnDeclaration";
+import { ForeignKeyDeclaration } from "./ForeignKeyDeclaration";
 
 export class Processor {
     public static readonly instance: Processor = new Processor();
@@ -25,7 +25,7 @@ export class Processor {
         this.validateTable(tableDeclaration, declarations);
 
         const columns = declarations.columns
-            .filter(q => q.tableConstructor === tableDeclaration.classConstructor)
+            .filter(q => q.tableName === tableDeclaration.name)
             .map(q => this.processColumn(q, declarations));
 
         return {
@@ -58,9 +58,7 @@ export class Processor {
             return undefined;
         }
 
-        const targetDeclaration = declarations.tables.find(
-            q => q.classConstructor === foreignKeyDeclaration.targetConstructor
-        )!;
+        const targetDeclaration = declarations.tables.find(q => q.name === foreignKeyDeclaration.targetName)!;
 
         return {
             ...foreignKeyDeclaration,
@@ -77,14 +75,14 @@ export class Processor {
     };
 
     private validateColumn = (columnDeclaration: ColumnDeclaration, declarations: Declarations) => {
-        const table = declarations.tables.find(q => q.classConstructor === columnDeclaration.tableConstructor);
+        const table = declarations.tables.find(q => q.name === columnDeclaration.tableName);
 
         if (!table) {
             throw new Error(`Table definition not found for column '${columnDeclaration.name}'.`);
         }
 
         const otherColumnsOnSameTable = declarations.columns
-            .filter(q => q.tableConstructor === columnDeclaration.tableConstructor)
+            .filter(q => q.name === columnDeclaration.tableName)
             .filter(q => q !== columnDeclaration);
 
         // TODO [RM]: proper case sensitivity when comparing:
@@ -101,11 +99,9 @@ export class Processor {
             return; // OK
         }
 
-        if (!declarations.tables.some(q => foreignKeyDeclaration.targetConstructor === q.classConstructor)) {
+        if (!declarations.tables.some(q => foreignKeyDeclaration.targetName === q.name)) {
             throw new Error(
-                `Foreign Key target named = '${
-                    foreignKeyDeclaration.targetConstructor.name
-                }' not found in declarations.`
+                `Foreign Key target named = '${foreignKeyDeclaration.targetName}' not found in declarations.`
             );
         }
 
@@ -113,12 +109,12 @@ export class Processor {
             foreignKeyDeclaration.targetColumnName &&
             declarations.columns
                 .filter(q => q.foreignKey)
-                .filter(q => q.foreignKey!.targetConstructor === foreignKeyDeclaration.targetConstructor)
+                .filter(q => q.foreignKey!.targetName === foreignKeyDeclaration.targetName)
                 .some(q => !q.foreignKey!.targetColumnName)
         ) {
             throw new Error(
                 `Composite Foreign Key to target named = '${
-                    foreignKeyDeclaration.targetConstructor.name
+                    foreignKeyDeclaration.targetName
                 }' have inconsistent declarations - some columns have targetColumnName, some doesn't.`
             );
         }

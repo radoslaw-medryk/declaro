@@ -1,4 +1,4 @@
-import { TableDeclaration } from "./TableDeclaration";
+import { TableDeclaration } from "./TableDeclaratrion";
 import { ColumnDeclaration } from "./ColumnDeclaration";
 
 export type Declarations = {

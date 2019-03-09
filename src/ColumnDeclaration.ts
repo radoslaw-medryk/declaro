@@ -1,8 +1,7 @@
-import { ClassConstructor } from "./primitives";
 import { ForeignKeyDeclaration } from "./ForeignKeyDeclaration";
 
 export type ColumnDeclaration = {
-    tableConstructor: ClassConstructor;
+    tableName: string;
     name: string;
     type: string;
     notNull?: boolean;

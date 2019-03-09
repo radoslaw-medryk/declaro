@@ -1,11 +1,11 @@
 import { Declaro } from "../Declaro";
-import { TableDeclaration } from "../TableDeclaration";
+import { InternalTableDeclaration } from "../InternalTableDeclaration";
 
 const declaro = Declaro.instance;
 
 export const table = (name: string) => {
     const decorator: ClassDecorator = target => {
-        const tableDeclaration: TableDeclaration = {
+        const tableDeclaration: InternalTableDeclaration = {
             classConstructor: target,
             name: name,
         };
