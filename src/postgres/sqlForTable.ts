@@ -1,13 +1,20 @@
 import { CreateTableSqlOptions } from "./CreateTableSqlOptions";
-import { ProcessedTableDeclaration } from "../ProcessedTableDeclaration";
 import { _i } from "./_i";
 import { sqlForColumn } from "./sqlForColumn";
 import { sqlForConstraints } from "./sqlForConstraints";
+import { TableDeclaration } from "../TableDeclaratrion";
+import { Declarations } from "../Declarations";
 
-export const sqlForTable = (table: ProcessedTableDeclaration, options: CreateTableSqlOptions = {}) => {
-    const entriesSql = table.columns
+export const sqlForTable = (
+    table: TableDeclaration,
+    declarations: Declarations,
+    options: CreateTableSqlOptions = {}
+) => {
+    const columns = declarations.columns.filter(q => q.tableName === table.name);
+
+    const entriesSql = columns
         .map(column => sqlForColumn(column))
-        .concat(sqlForConstraints(table))
+        .concat(sqlForConstraints(table, columns))
         .join(`,\n`);
 
     let sql = ``;

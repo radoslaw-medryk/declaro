@@ -1,88 +1,128 @@
-import { Declarations } from "./Declarations";
-import { ProcessedDeclarations } from "./ProcessedDeclarations";
-import { ProcessedTableDeclaration } from "./ProcessedTableDeclaration";
-import { ProcessedColumnDeclaration } from "./ProcessedColumnDeclaration";
-import { ProcessedForeignKeyDeclaration } from "./ProcessedForeignKeyDeclaration";
+import { InternalTableDeclaration } from "./InternalTableDeclaration";
 import { TableDeclaration } from "./TableDeclaratrion";
+import { InternalColumnDeclaration } from "./InternalColumnDeclaration";
 import { ColumnDeclaration } from "./ColumnDeclaration";
+import { InternalForeignKeyDeclaration } from "./InternalForeignKeyDeclaration";
 import { ForeignKeyDeclaration } from "./ForeignKeyDeclaration";
+import { ClassConstructor } from "./primitives";
+import { Declarations } from "./Declarations";
+import { References } from "./References";
+import { InternalDeclarations } from "./InternalDeclarations";
 
 export class Processor {
     public static readonly instance: Processor = new Processor();
 
-    public processDeclarations = (declarations: Declarations): ProcessedDeclarations => {
-        const tables = declarations.tables.map(q => this.processTable(q, declarations));
+    public declarationsFromInternal = (internalDeclarations: InternalDeclarations): Declarations => {
+        const tableDeclarations = internalDeclarations.tables.map(q => this.tableFromInternal(q, internalDeclarations));
+        const columnDeclarations = internalDeclarations.columns.map(q =>
+            this.columnFromInternal(q, internalDeclarations)
+        );
 
         return {
-            tables: tables,
+            tables: tableDeclarations,
+            columns: columnDeclarations,
         };
     };
 
-    private processTable = (
-        tableDeclaration: TableDeclaration,
-        declarations: Declarations
-    ): ProcessedTableDeclaration => {
-        this.validateTable(tableDeclaration, declarations);
-
-        const columns = declarations.columns
-            .filter(q => q.tableName === tableDeclaration.name)
-            .map(q => this.processColumn(q, declarations));
+    public referencesFromInternal = (internalDeclarations: InternalDeclarations): References => {
+        const tableReferences = internalDeclarations.tables.map(q => ({
+            name: q.name,
+            classConstructor: q.classConstructor,
+        }));
 
         return {
-            ...tableDeclaration,
-            columns: columns,
+            tables: tableReferences,
         };
     };
 
-    private processColumn = (
-        columnDeclaration: ColumnDeclaration,
-        declarations: Declarations
-    ): ProcessedColumnDeclaration => {
-        this.validateColumn(columnDeclaration, declarations);
-
-        const foreignKey = this.processForeignKey(columnDeclaration.foreignKey, declarations);
+    private tableFromInternal = (
+        tableDeclaration: InternalTableDeclaration,
+        internalDeclarations: InternalDeclarations
+    ): TableDeclaration => {
+        this.validateTable(tableDeclaration, internalDeclarations);
 
         return {
-            ...columnDeclaration,
-            foreignKey: foreignKey,
+            name: tableDeclaration.name,
         };
     };
 
-    private processForeignKey = (
-        foreignKeyDeclaration: ForeignKeyDeclaration | undefined,
-        declarations: Declarations
-    ): ProcessedForeignKeyDeclaration | undefined => {
-        this.validateForeignKey(foreignKeyDeclaration, declarations);
+    private columnFromInternal = (
+        columnDeclaration: InternalColumnDeclaration,
+        internalDeclarations: InternalDeclarations
+    ): ColumnDeclaration => {
+        this.validateColumn(columnDeclaration, internalDeclarations);
 
-        if (!foreignKeyDeclaration) {
+        const tableDeclaration = this.tableDeclarationFromConstructor(
+            columnDeclaration.tableConstructor,
+            internalDeclarations
+        );
+
+        const { tableConstructor, foreignKey, ...rest } = columnDeclaration;
+
+        return {
+            ...rest,
+            tableName: tableDeclaration.name,
+            foreignKey: this.foreignKeyFromInternal(foreignKey, internalDeclarations),
+        };
+    };
+
+    private foreignKeyFromInternal = (
+        foreignKey: InternalForeignKeyDeclaration | undefined,
+        internalDeclarations: InternalDeclarations
+    ): ForeignKeyDeclaration | undefined => {
+        this.validateForeignKey(foreignKey, internalDeclarations);
+
+        if (!foreignKey) {
             return undefined;
         }
 
-        const targetDeclaration = declarations.tables.find(q => q.name === foreignKeyDeclaration.targetName)!;
+        const targetDeclaration = this.tableDeclarationFromConstructor(
+            foreignKey.targetConstructor,
+            internalDeclarations
+        );
 
         return {
-            ...foreignKeyDeclaration,
-            targetDeclaration: targetDeclaration,
+            targetName: targetDeclaration.name,
+            targetColumnName: foreignKey.targetColumnName,
         };
     };
 
-    private validateTable = (tableDeclaration: TableDeclaration, declarations: Declarations) => {
-        const otherTables = declarations.tables.filter(q => q !== tableDeclaration);
+    private tableDeclarationFromConstructor = (
+        clasConstructor: ClassConstructor,
+        internalDeclarations: InternalDeclarations
+    ): InternalTableDeclaration => {
+        const tableDeclaration = internalDeclarations.tables.find(q => q.classConstructor === clasConstructor);
+
+        if (!tableDeclaration) {
+            throw new Error(`Table not declared for constructor named '${clasConstructor.name}'.`);
+        }
+
+        return tableDeclaration;
+    };
+
+    private validateTable = (
+        tableDeclaration: InternalTableDeclaration,
+        internalDeclarations: InternalDeclarations
+    ) => {
+        const otherTables = internalDeclarations.tables.filter(q => q !== tableDeclaration);
 
         if (otherTables.some(q => q.name === tableDeclaration.name)) {
             throw new Error(`Duplicated table name '${tableDeclaration.name}'.`);
         }
     };
 
-    private validateColumn = (columnDeclaration: ColumnDeclaration, declarations: Declarations) => {
-        const table = declarations.tables.find(q => q.name === columnDeclaration.tableName);
+    private validateColumn = (
+        columnDeclaration: InternalColumnDeclaration,
+        internalDeclarations: InternalDeclarations
+    ) => {
+        const table = internalDeclarations.tables.find(q => q.classConstructor === columnDeclaration.tableConstructor);
 
         if (!table) {
             throw new Error(`Table definition not found for column '${columnDeclaration.name}'.`);
         }
 
-        const otherColumnsOnSameTable = declarations.columns
-            .filter(q => q.name === columnDeclaration.tableName)
+        const otherColumnsOnSameTable = internalDeclarations.columns
+            .filter(q => q.tableConstructor === columnDeclaration.tableConstructor)
             .filter(q => q !== columnDeclaration);
 
         // TODO [RM]: proper case sensitivity when comparing:
@@ -92,29 +132,31 @@ export class Processor {
     };
 
     private validateForeignKey = (
-        foreignKeyDeclaration: ForeignKeyDeclaration | undefined,
-        declarations: Declarations
+        foreignKeyDeclaration: InternalForeignKeyDeclaration | undefined,
+        internalDeclarations: InternalDeclarations
     ) => {
         if (!foreignKeyDeclaration) {
             return; // OK
         }
 
-        if (!declarations.tables.some(q => foreignKeyDeclaration.targetName === q.name)) {
+        if (!internalDeclarations.tables.some(q => foreignKeyDeclaration.targetConstructor === q.classConstructor)) {
             throw new Error(
-                `Foreign Key target named = '${foreignKeyDeclaration.targetName}' not found in declarations.`
+                `Foreign Key target named = '${
+                    foreignKeyDeclaration.targetConstructor.name
+                }' not found in declarations.`
             );
         }
 
         if (
             foreignKeyDeclaration.targetColumnName &&
-            declarations.columns
+            internalDeclarations.columns
                 .filter(q => q.foreignKey)
-                .filter(q => q.foreignKey!.targetName === foreignKeyDeclaration.targetName)
+                .filter(q => q.foreignKey!.targetConstructor === foreignKeyDeclaration.targetConstructor)
                 .some(q => !q.foreignKey!.targetColumnName)
         ) {
             throw new Error(
                 `Composite Foreign Key to target named = '${
-                    foreignKeyDeclaration.targetName
+                    foreignKeyDeclaration.targetConstructor.name
                 }' have inconsistent declarations - some columns have targetColumnName, some doesn't.`
             );
         }

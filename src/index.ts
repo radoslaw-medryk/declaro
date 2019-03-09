@@ -1,8 +1,7 @@
 export * from "./Declaro";
 export * from "./decorators";
 
-export * from "./Processor";
-
+// TODO [RM]: move to new package
 export * from "./postgres";
 
 // TODO [RM]: write unit tests

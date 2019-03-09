@@ -1,7 +1,7 @@
-import { ProcessedColumnDeclaration } from "../ProcessedColumnDeclaration";
 import { _i } from "./_i";
+import { ColumnDeclaration } from "../ColumnDeclaration";
 
-export const sqlForPrimaryKeys = (primaryKeyColumns: ProcessedColumnDeclaration[]): string[] => {
+export const sqlForPrimaryKeys = (primaryKeyColumns: ColumnDeclaration[]): string[] => {
     if (primaryKeyColumns.length === 0) {
         return [];
     }
